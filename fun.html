@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turn-Based Q&A Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .hidden {
+            display: none;
+        }
+        .player-list, .responses {
+            margin: 10px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .player-list li, .responses li {
+            padding: 5px 10px;
+            background: #eaeaea;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Turn-Based Q&A Game</h1>
+        <div id="join-phase">
+            <h2>Join the Game</h2>
+            <input type="text" id="playerName" placeholder="Enter your name">
+            <button id="joinButton">Join</button>
+            <ul class="player-list" id="playerList"></ul>
+            <button id="startButton" class="hidden">Start Game</button>
+        </div>
+        <div id="game-phase" class="hidden">
+            <h2 id="currentPlayerTurn"></h2>
+            <div id="question-area">
+                <input type="text" id="questionInput" placeholder="Write your question">
+                <button id="submitQuestion">Submit Question</button>
+            </div>
+            <div id="response-area" class="hidden">
+                <input type="text" id="responseInput" placeholder="Write your response">
+                <button id="submitResponse">Submit Response</button>
+                <ul class="responses" id="responseList"></ul>
+                <button id="revealResponses" class="hidden">Reveal Responses</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const players = [];
+        let currentPlayerIndex = 0;
+        let responses = [];
+        const joinPhase = document.getElementById("join-phase");
+        const gamePhase = document.getElementById("game-phase");
+        const playerList = document.getElementById("playerList");
+        const startButton = document.getElementById("startButton");
+        const currentPlayerTurn = document.getElementById("currentPlayerTurn");
+        const questionArea = document.getElementById("question-area");
+        const responseArea = document.getElementById("response-area");
+        const responseList = document.getElementById("responseList");
+        const revealResponses = document.getElementById("revealResponses");
+
+        document.getElementById("joinButton").addEventListener("click", () => {
+            const playerName = document.getElementById("playerName").value.trim();
+            if (playerName && !players.includes(playerName)) {
+                players.push(playerName);
+                const listItem = document.createElement("li");
+                listItem.textContent = playerName;
+                playerList.appendChild(listItem);
+                document.getElementById("playerName").value = "";
+            }
+            startButton.classList.toggle("hidden", players.length < 2);
+        });
+
+        startButton.addEventListener("click", () => {
+            joinPhase.classList.add("hidden");
+            gamePhase.classList.remove("hidden");
+            updateTurn();
+        });
+
+        document.getElementById("submitQuestion").addEventListener("click", () => {
+            const question = document.getElementById("questionInput").value.trim();
+            if (question) {
+                document.getElementById("questionInput").value = "";
+                questionArea.classList.add("hidden");
+                responseArea.classList.remove("hidden");
+                currentPlayerTurn.textContent = `Waiting for responses to: "${question}"`;
+            }
+        });
+
+        document.getElementById("submitResponse").addEventListener("click", () => {
+            const response = document.getElementById("responseInput").value.trim();
+            if (response) {
+                responses.push(response);
+                const listItem = document.createElement("li");
+                listItem.textContent = "Hidden Response";
+                responseList.appendChild(listItem);
+                document.getElementById("responseInput").value = "";
+                if (responses.length === players.length - 1) {
+                    revealResponses.classList.remove("hidden");
+                }
+            }
+        });
+
+        revealResponses.addEventListener("click", () => {
+            responseList.innerHTML = "";
+            responses.forEach((response, index) => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `${players[(currentPlayerIndex + index + 1) % players.length]}: ${response}`;
+                responseList.appendChild(listItem);
+            });
+            revealResponses.classList.add("hidden");
+            responses = [];
+            responseArea.classList.add("hidden");
+            questionArea.classList.remove("hidden");
+            nextTurn();
+        });
+
+        function updateTurn() {
+            currentPlayerTurn.textContent = `It's ${players[currentPlayerIndex]}'s turn to ask a question!`;
+        }
+
+        function nextTurn() {
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            updateTurn();
+        }
+    </script>
+</body>
+</html>
